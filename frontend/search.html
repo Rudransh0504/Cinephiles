@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Results - Cinephiles</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    .movie-card {
+      width: 180px;
+      border-radius: 8px;
+      transition: transform 0.3s;
+      cursor: pointer;
+    }
+    .movie-card:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5">
+    <h2 class="mb-4">Search Results</h2>
+    <div class="d-flex flex-wrap gap-3" id="results"></div>
+  </div>
+
+  <!-- Bootstrap Modal -->
+  <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="modal-title">Loading...</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="api-config.js"></script>
+
+  <script>
+    
+    const BASE_URL = API_BASE + "/tmdb";
+    const IMG_URL = "https://image.tmdb.org/t/p/w200";
+    const LARGE_IMG_URL = "https://image.tmdb.org/t/p/w500";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get("q");
+
+    const fallbackResults = [
+      { id: 550, media_type: "movie", title: "Fight Club", poster_path: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg" },
+      { id: 13, media_type: "movie", title: "Forrest Gump", poster_path: "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg" },
+      { id: 278, media_type: "movie", title: "The Shawshank Redemption", poster_path: "/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg" },
+      { id: 680, media_type: "movie", title: "Pulp Fiction", poster_path: "/d5iIlFn5s0ImszYzBPb8JPIfbmd.jpg" }
+    ];
+
+    function renderResults(items) {
+      const container = document.getElementById("results");
+      container.innerHTML = "";
+
+      if (!items || items.length === 0) {
+        container.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "text-center";
+
+        let imgSrc = "";
+        if (item.poster_path) imgSrc = IMG_URL + item.poster_path;
+        else if (item.profile_path) imgSrc = IMG_URL + item.profile_path;
+
+        div.innerHTML = `
+          <img src="${imgSrc || "https://via.placeholder.com/200x300?text=No+Poster"}" class="movie-card" data-id="${item.id}" data-type="${item.media_type}">
+          <p class="mt-2">${item.title || item.name}</p>
+        `;
+
+        div.querySelector("img").addEventListener("click", () => {
+          openDetails(item.id, item.media_type);
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    async function fetchResults() {
+      if (!query) {
+        document.getElementById("results").innerHTML = "<p>No search query provided.</p>";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BASE_URL}/search/multi?language=en-US&query=${encodeURIComponent(query)}`);
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+        const data = await res.json();
+        const results = data.results || [];
+        renderResults(results);
+      } catch (error) {
+        console.error("Failed to load search results:", error);
+        renderResults(fallbackResults);
+      }
+    }
+
+    // 🔥 Open Modal with details
+    async function openDetails(id, type) {
+      let detailRes, detailData, contentHtml = "";
+
+      if (type === "person") {
+        // Fetch person details
+        detailRes = await fetch(`${BASE_URL}/person/${id}?language=en-US`);
+        detailData = await detailRes.json();
+
+        // Fetch their movies
+        const creditsRes = await fetch(`${BASE_URL}/person/${id}/movie_credits?language=en-US`);
+        const creditsData = await creditsRes.json();
+
+        contentHtml = `
+          <div class="row">
+            <div class="col-md-4">
+              <img src="${detailData.profile_path ? LARGE_IMG_URL + detailData.profile_path : ""}" class="img-fluid rounded">
+            </div>
+            <div class="col-md-8">
+              <h5>Biography</h5>
+              <p>${detailData.biography ? detailData.biography.slice(0, 600) + "..." : "No biography available."}</p>
+              <h5>Known For</h5>
+              <div class="d-flex flex-wrap gap-2">
+                ${creditsData.cast.slice(0,6).map(m => `
+                  <div class="text-center">
+                    <img src="${m.poster_path ? IMG_URL+m.poster_path : ""}" class="movie-card">
+                    <p style="font-size: 14px;">${m.title}</p>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("modal-title").innerText = detailData.name;
+      } 
+      else if (type === "movie") {
+        // Fetch movie details
+        detailRes = await fetch(`${BASE_URL}/movie/${id}?language=en-US`);
+        detailData = await detailRes.json();
+
+        contentHtml = `
+          <div class="row">
+            <div class="col-md-4">
+              <img src="${detailData.poster_path ? LARGE_IMG_URL + detailData.poster_path : ""}" class="img-fluid rounded">
+            </div>
+            <div class="col-md-8">
+              <h5>Overview</h5>
+              <p>${detailData.overview}</p>
+              <p><strong>Release Date:</strong> ${detailData.release_date}</p>
+              <p><strong>Rating:</strong> ⭐ ${detailData.vote_average.toFixed(1)}/10</p>
+              <button class="btn btn-outline-light mt-3">+ Add to Watchlist</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("modal-title").innerText = detailData.title;
+      } 
+      else if (type === "tv") {
+        // Fetch TV details
+        detailRes = await fetch(`${BASE_URL}/tv/${id}?language=en-US`);
+        detailData = await detailRes.json();
+
+        contentHtml = `
+          <div class="row">
+            <div class="col-md-4">
+              <img src="${detailData.poster_path ? LARGE_IMG_URL + detailData.poster_path : ""}" class="img-fluid rounded">
+            </div>
+            <div class="col-md-8">
+              <h5>Overview</h5>
+              <p>${detailData.overview}</p>
+              <p><strong>First Air Date:</strong> ${detailData.first_air_date}</p>
+              <p><strong>Rating:</strong> ⭐ ${detailData.vote_average.toFixed(1)}/10</p>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("modal-title").innerText = detailData.name;
+      }
+
+      document.getElementById("modal-content").innerHTML = contentHtml;
+      const modal = new bootstrap.Modal(document.getElementById("detailsModal"));
+      modal.show();
+    }
+
+    fetchResults();
+  </script>
+</body>
+</html>

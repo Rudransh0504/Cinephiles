@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Cinephiles</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: #000;
+      font-family: 'Arial', sans-serif;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-box {
+      background: #111;
+      border-radius: 14px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .auth-box h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
+
+    .auth-box p.subtitle {
+      text-align: center;
+      color: #999;
+      margin-bottom: 25px;
+    }
+
+    .form-control {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: white;
+      margin-bottom: 15px;
+    }
+
+    .form-control:focus {
+      background: #1a1a1a;
+      color: white;
+      border-color: #1db954;
+      box-shadow: none;
+    }
+
+    .btn-success {
+      width: 100%;
+      background: #1db954;
+      border: none;
+      font-weight: bold;
+      padding: 10px;
+    }
+
+    .toggle-row {
+      text-align: center;
+      margin-top: 20px;
+      color: #999;
+    }
+
+    .toggle-row a {
+      color: #1db954;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .error-msg {
+      background: rgba(220, 53, 69, 0.15);
+      border: 1px solid rgba(220, 53, 69, 0.4);
+      color: #ff8a8a;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .logo-text {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #1db954;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-box">
+    <div class="logo-text"><i class="bi bi-film"></i> Cinephiles</div>
+    <h1 id="formTitle">Welcome back</h1>
+    <p class="subtitle" id="formSubtitle">Sign in to continue</p>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <form id="authForm">
+      <input type="text" class="form-control" id="usernameField" placeholder="Username" style="display:none;">
+      <input type="email" class="form-control" id="emailField" placeholder="Email" required>
+      <input type="password" class="form-control" id="passwordField" placeholder="Password" required>
+      <button type="submit" class="btn btn-success" id="submitBtn">Sign In</button>
+    </form>
+
+    <div class="toggle-row">
+      <span id="toggleText">Don't have an account?</span>
+      <a id="toggleLink" onclick="toggleMode()">Sign up</a>
+    </div>
+  </div>
+
+  <script src="api-config.js"></script>
+  <script>
+    let mode = "login"; // or "signup"
+
+    function toggleMode() {
+      mode = mode === "login" ? "signup" : "login";
+      updateFormUI();
+    }
+
+    function updateFormUI() {
+      const isSignup = mode === "signup";
+      document.getElementById("formTitle").textContent = isSignup ? "Create account" : "Welcome back";
+      document.getElementById("formSubtitle").textContent = isSignup ? "Join Cinephiles" : "Sign in to continue";
+      document.getElementById("usernameField").style.display = isSignup ? "block" : "none";
+      document.getElementById("usernameField").required = isSignup;
+      document.getElementById("submitBtn").textContent = isSignup ? "Sign Up" : "Sign In";
+      document.getElementById("toggleText").textContent = isSignup ? "Already have an account?" : "Don't have an account?";
+      document.getElementById("toggleLink").textContent = isSignup ? "Sign in" : "Sign up";
+      hideError();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    function hideError() {
+      document.getElementById("errorMsg").style.display = "none";
+    }
+
+    document.getElementById("authForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const email = document.getElementById("emailField").value.trim();
+      const password = document.getElementById("passwordField").value;
+
+      try {
+        if (mode === "signup") {
+          const username = document.getElementById("usernameField").value.trim();
+
+          const res = await fetch(`${API_BASE}/auth/signup`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, password }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.detail || "Signup failed");
+          }
+
+          // Auto-login after signup
+          await loginUser(email, password);
+        } else {
+          await loginUser(email, password);
+        }
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+
+    async function loginUser(email, password) {
+      // FastAPI's OAuth2PasswordRequestForm expects form-urlencoded data,
+      // with the email going in the 'username' field
+      const formBody = new URLSearchParams();
+      formBody.append("username", email);
+      formBody.append("password", password);
+
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formBody,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "Login failed");
+      }
+
+      setToken(data.access_token);
+      window.location.href = "index.html";
+    }
+
+    // If already logged in, skip straight to home
+    if (isLoggedIn()) {
+      window.location.href = "index.html";
+    }
+  </script>
+
+</body>
+</html>

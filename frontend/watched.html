@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watched Movies - Cinephiles</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 50%;
+      left: 15px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      z-index: 1000;
+    }
+
+    .sidebar a {
+      color: white;
+      font-size: 22px;
+      text-decoration: none;
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .sidebar a:hover, .sidebar a.active {
+      color: #1db954;
+      transform: scale(1.2);
+    }
+
+    .logo {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 2000;
+    }
+
+    .logo img {
+      height: 110px;
+      width: auto;
+      filter: drop-shadow(0 0 5px rgba(0,0,0,0.7));
+    }
+
+    .header-section {
+      padding: 120px 40px 40px 100px;
+      background: linear-gradient(to bottom, rgba(20,20,20,1) 0%, rgba(0,0,0,1) 100%);
+    }
+
+    .header-section h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .header-section p {
+      color: #aaa;
+      font-size: 1.1rem;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    .stat-box {
+      background: #111;
+      border-radius: 10px;
+      padding: 15px 25px;
+      text-align: center;
+    }
+
+    .stat-box .stat-number {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #1db954;
+    }
+
+    .stat-box .stat-label {
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    .search-container {
+      padding: 20px 40px 20px 100px;
+      background-color: #0a0a0a;
+    }
+
+    .search-bar {
+      max-width: 600px;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .search-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: white;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    .search-bar input::placeholder {
+      color: #999;
+    }
+
+    .search-bar i {
+      color: #999;
+      margin-right: 10px;
+    }
+
+    .tabs {
+      padding: 20px 40px 0 100px;
+      border-bottom: 1px solid #222;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 1.1rem;
+      padding: 10px 20px;
+      margin-right: 20px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      color: white;
+      border-bottom: 3px solid #1db954;
+    }
+
+    .tab-btn:hover {
+      color: white;
+    }
+
+    .content-section {
+      padding: 30px 40px 40px 100px;
+      min-height: 60vh;
+    }
+
+    .movie-card {
+      position: relative;
+      width: 180px;
+      border-radius: 8px;
+      transition: transform 0.3s;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .movie-card:hover {
+      transform: scale(1.05);
+    }
+
+    .movie-card img {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+    }
+
+    .movie-card .movie-title {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+      color: #ddd;
+    }
+
+    .movie-card .movie-rating-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.8);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    .movie-card .user-rating-badge {
+      position: absolute;
+      bottom: 40px;
+      left: 8px;
+      background: rgba(29, 185, 84, 0.95);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .movie-card .action-btn {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(29, 185, 84, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .movie-card .action-btn:hover {
+      background: rgba(29, 185, 84, 1);
+      transform: scale(1.1);
+    }
+
+    .movie-card .action-btn.remove {
+      background: rgba(220, 53, 69, 0.9);
+    }
+
+    .movie-card .action-btn.remove:hover {
+      background: rgba(220, 53, 69, 1);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+      color: #999;
+      margin-bottom: 10px;
+    }
+
+    .movie-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    /* Rating Modal */
+    .star-rating {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .star-rating i {
+      font-size: 2.2rem;
+      color: #444;
+      cursor: pointer;
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .star-rating i.filled {
+      color: #ffc107;
+    }
+
+    .star-rating i:hover {
+      transform: scale(1.15);
+    }
+
+    .rating-value {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #1db954;
+      margin-bottom: 10px;
+    }
+
+    /* Toast */
+    .toast-notification {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #1db954;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      z-index: 9999;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Sort dropdown */
+    .sort-select {
+      background: #111;
+      color: white;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 8px 15px;
+      margin-left: auto;
+    }
+
+    .tabs-row {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <a href="index.html"><i class="bi bi-house"></i></a>
+    <a href="watchlist.html"><i class="bi bi-bookmark-plus"></i></a>
+    <a href="watched.html" class="active"><i class="bi bi-list-ul"></i></a>
+    <a href="faceoff.html"><i class="bi bi-lightning-charge"></i></a>
+  </div>
+
+  <!-- Header -->
+  <div class="header-section">
+    <h1>Watched Movies</h1>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-label">Total Watched</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-avg">0.0</div>
+        <div class="stat-label">Avg Rating Given</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-top">-</div>
+        <div class="stat-label">Highest Rated</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-container">
+    <div class="search-bar">
+      <i class="bi bi-search"></i>
+      <input type="text" id="searchInput" placeholder="Search for movies to mark as watched...">
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs tabs-row">
+    <button class="tab-btn active" onclick="showTab('my-watched', event)">My Watched Movies</button>
+    <button class="tab-btn" onclick="showTab('browse', event)">Browse Movies</button>
+    <select class="sort-select" id="sortSelect" onchange="renderWatched()" style="display:none;">
+      <option value="recent">Recently Watched</option>
+      <option value="rating-high">Highest Rated</option>
+      <option value="rating-low">Lowest Rated</option>
+      <option value="title">Title (A-Z)</option>
+    </select>
+  </div>
+
+  <!-- Content -->
+  <div class="content-section">
+    <!-- My Watched Tab -->
+    <div id="my-watched-tab" class="tab-content">
+      <div id="watched-movies" class="movie-grid"></div>
+      <div id="empty-watched" class="empty-state" style="display:none;">
+        <i class="bi bi-film"></i>
+        <h3>You haven't marked any movies as watched yet</h3>
+        <p>Browse movies and mark them as watched to start rating!</p>
+      </div>
+    </div>
+
+    <!-- Browse Tab -->
+    <div id="browse-tab" class="tab-content" style="display:none;">
+      <div id="browse-movies" class="movie-grid"></div>
+      <div id="search-results" class="movie-grid" style="display:none;"></div>
+      <div class="loading" id="loading" style="display:none;">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rating Modal -->
+  <div class="modal fade" id="ratingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="ratingModalTitle">Rate this movie</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <img id="ratingModalPoster" style="width:120px; border-radius:8px;" class="mb-3">
+          <div class="rating-value" id="ratingValue">0 / 10</div>
+          <div class="star-rating" id="starRating"></div>
+          <button class="btn btn-success mt-3 px-4" onclick="confirmRating()">Save Rating</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="api-config.js"></script>
+
+  <script>
+    requireAuth(); // redirects to auth.html if there's no token
+
+  
+    const BASE_URL = API_BASE + "/tmdb";
+    const IMG_URL = "https://image.tmdb.org/t/p/w500";
+
+    // Every item in this array uses `id` = the TMDB movie id,
+    // so the rest of the page logic stays the same as before.
+    let watchedMovies = [];
+    let currentTab = 'my-watched';
+    let searchTimeout;
+    let pendingMovie = null;
+    let selectedRating = 0;
+
+    // Convert a backend record into the shape the page uses
+    function normalize(item) {
+      return {
+        id: item.tmdb_movie_id,
+        title: item.title,
+        poster_path: item.poster_path,
+        vote_average: item.vote_average,
+        release_date: item.release_date,
+        overview: item.overview,
+        user_rating: item.user_rating,
+        watched_at: item.watched_at,
+      };
+    }
+
+    // ---------- INIT ----------
+    async function init() {
+      buildStarRating();
+      await loadWatched();
+      loadBrowseMovies();
+    }
+
+    async function loadWatched() {
+      try {
+        const items = await apiFetch("/watched/");
+        if (items) {
+          watchedMovies = items.map(normalize);
+        }
+      } catch (err) {
+        console.error("Error loading watched movies:", err);
+        showToast("Could not load your watched movies");
+      }
+      renderWatched();
+      updateStats();
+    }
+
+    // ---------- TABS ----------
+    function showTab(tab, evt) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      if (evt && evt.currentTarget) {
+        evt.currentTarget.classList.add('active');
+      }
+
+      document.getElementById('sortSelect').style.display = tab === 'my-watched' ? 'block' : 'none';
+
+      if (tab === 'my-watched') {
+        document.getElementById('my-watched-tab').style.display = 'block';
+        document.getElementById('browse-tab').style.display = 'none';
+      } else {
+        document.getElementById('my-watched-tab').style.display = 'none';
+        document.getElementById('browse-tab').style.display = 'block';
+      }
+    }
+
+    // ---------- STATS ----------
+    function updateStats() {
+      const count = watchedMovies.length;
+      document.getElementById('stat-total').textContent = count;
+
+      if (count > 0) {
+        const avg = watchedMovies.reduce((sum, m) => sum + (m.user_rating || 0), 0) / count;
+        document.getElementById('stat-avg').textContent = avg.toFixed(1);
+
+        const top = [...watchedMovies].sort((a, b) => (b.user_rating || 0) - (a.user_rating || 0))[0];
+        document.getElementById('stat-top').textContent = top.title.length > 15
+          ? top.title.slice(0, 15) + "..."
+          : top.title;
+      } else {
+        document.getElementById('stat-avg').textContent = '0.0';
+        document.getElementById('stat-top').textContent = '-';
+      }
+    }
+
+    // ---------- RENDER WATCHED ----------
+    function renderWatched() {
+      const container = document.getElementById('watched-movies');
+      const emptyState = document.getElementById('empty-watched');
+
+      if (watchedMovies.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      const sortBy = document.getElementById('sortSelect').value;
+      let sorted = [...watchedMovies];
+
+      if (sortBy === 'rating-high') sorted.sort((a, b) => (b.user_rating || 0) - (a.user_rating || 0));
+      else if (sortBy === 'rating-low') sorted.sort((a, b) => (a.user_rating || 0) - (b.user_rating || 0));
+      else if (sortBy === 'title') sorted.sort((a, b) => a.title.localeCompare(b.title));
+      else sorted.sort((a, b) => new Date(b.watched_at) - new Date(a.watched_at));
+
+      container.innerHTML = '';
+      sorted.forEach(movie => {
+        container.appendChild(createWatchedCard(movie));
+      });
+    }
+
+    function createWatchedCard(movie) {
+      const div = document.createElement('div');
+      div.className = 'movie-card';
+
+      const posterPath = movie.poster_path ? IMG_URL + movie.poster_path : 'https://via.placeholder.com/180x270?text=No+Image';
+
+      div.innerHTML = `
+        <img src="${posterPath}" alt="${movie.title}">
+        <div class="movie-rating-badge">⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</div>
+        <div class="user-rating-badge"><i class="bi bi-star-fill"></i> ${movie.user_rating}/10</div>
+        <button class="action-btn remove" onclick="removeWatched(${movie.id}, event)">
+          <i class="bi bi-dash"></i>
+        </button>
+        <div class="movie-title">${movie.title}</div>
+      `;
+
+      div.querySelector('img').addEventListener('click', () => openRatingModal(movie));
+
+      return div;
+    }
+
+    async function removeWatched(movieId, event) {
+      event.stopPropagation();
+      try {
+        await apiFetch(`/watched/${movieId}`, { method: "DELETE" });
+        watchedMovies = watchedMovies.filter(m => m.id !== movieId);
+        renderWatched();
+        updateStats();
+        if (currentTab === 'browse') loadBrowseMovies();
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    // ---------- BROWSE ----------
+    async function loadBrowseMovies() {
+      try {
+        const res = await fetch(`${BASE_URL}/movie/popular?language=en-US&page=1`);
+        const data = await res.json();
+        renderBrowseMovies(data.results);
+      } catch (error) {
+        console.error('Error loading movies:', error);
+      }
+    }
+
+    function renderBrowseMovies(movies) {
+      const container = document.getElementById('browse-movies');
+      container.innerHTML = '';
+      movies.forEach(movie => {
+        container.appendChild(createBrowseCard(movie));
+      });
+    }
+
+    function createBrowseCard(movie) {
+      const div = document.createElement('div');
+      div.className = 'movie-card';
+
+      const isWatched = watchedMovies.some(m => m.id === movie.id);
+      const posterPath = movie.poster_path ? IMG_URL + movie.poster_path : 'https://via.placeholder.com/180x270?text=No+Image';
+
+      div.innerHTML = `
+        <img src="${posterPath}" alt="${movie.title}">
+        <div class="movie-rating-badge">⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</div>
+        <button class="action-btn ${isWatched ? 'remove' : ''}" onclick="handleBrowseAction(${movie.id}, event)">
+          <i class="bi ${isWatched ? 'bi-check-lg' : 'bi-plus'}"></i>
+        </button>
+        <div class="movie-title">${movie.title}</div>
+      `;
+
+      div.querySelector('img').addEventListener('click', () => openRatingModal(movie));
+
+      return div;
+    }
+
+    async function handleBrowseAction(movieId, event) {
+      event.stopPropagation();
+      const isWatched = watchedMovies.some(m => m.id === movieId);
+
+      if (isWatched) {
+        await removeWatched(movieId, event);
+      } else {
+        fetchAndOpenRating(movieId);
+      }
+    }
+
+    async function fetchAndOpenRating(movieId) {
+      const res = await fetch(`${BASE_URL}/movie/${movieId}?language=en-US`);
+      const movie = await res.json();
+      openRatingModal(movie);
+    }
+
+    // ---------- RATING MODAL ----------
+    function buildStarRating() {
+      const container = document.getElementById('starRating');
+      container.innerHTML = '';
+      for (let i = 1; i <= 10; i++) {
+        const star = document.createElement('i');
+        star.className = 'bi bi-star';
+        star.dataset.value = i;
+        star.addEventListener('click', () => setRating(i));
+        container.appendChild(star);
+      }
+    }
+
+    function setRating(value) {
+      selectedRating = value;
+      document.getElementById('ratingValue').textContent = `${value} / 10`;
+      const stars = document.querySelectorAll('#starRating i');
+      stars.forEach(star => {
+        if (parseInt(star.dataset.value) <= value) {
+          star.className = 'bi bi-star-fill filled';
+        } else {
+          star.className = 'bi bi-star';
+        }
+      });
+    }
+
+    function openRatingModal(movie) {
+      pendingMovie = movie;
+
+      const existing = watchedMovies.find(m => m.id === movie.id);
+      selectedRating = existing ? existing.user_rating : 0;
+
+      document.getElementById('ratingModalTitle').textContent = movie.title;
+      document.getElementById('ratingModalPoster').src = movie.poster_path
+        ? IMG_URL + movie.poster_path
+        : 'https://via.placeholder.com/120x180?text=No+Image';
+
+      setRating(selectedRating);
+
+      const modal = new bootstrap.Modal(document.getElementById('ratingModal'));
+      modal.show();
+    }
+
+    async function confirmRating() {
+      if (!pendingMovie) return;
+
+      if (selectedRating === 0) {
+        alert('Please select a rating before saving.');
+        return;
+      }
+
+      try {
+        // The backend creates the record, or updates the rating if it already exists
+        const saved = await apiFetch("/watched/", {
+          method: "POST",
+          body: JSON.stringify({
+            tmdb_movie_id: pendingMovie.id,
+            title: pendingMovie.title,
+            poster_path: pendingMovie.poster_path,
+            vote_average: pendingMovie.vote_average,
+            release_date: pendingMovie.release_date,
+            overview: pendingMovie.overview,
+            user_rating: selectedRating,
+          }),
+        });
+
+        if (!saved) return;
+
+        const movieData = normalize(saved);
+        const existingIndex = watchedMovies.findIndex(m => m.id === movieData.id);
+
+        if (existingIndex !== -1) {
+          watchedMovies[existingIndex] = movieData;
+        } else {
+          watchedMovies.push(movieData);
+        }
+
+        updateStats();
+        renderWatched();
+
+        if (currentTab === 'browse') loadBrowseMovies();
+
+        bootstrap.Modal.getInstance(document.getElementById('ratingModal')).hide();
+        showToast('Rating saved!');
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    // ---------- SEARCH ----------
+    document.getElementById('searchInput').addEventListener('input', function (e) {
+      const query = e.target.value.trim();
+      clearTimeout(searchTimeout);
+
+      if (query.length === 0) {
+        if (currentTab === 'browse') {
+          document.getElementById('search-results').style.display = 'none';
+          document.getElementById('browse-movies').style.display = 'flex';
+        }
+        return;
+      }
+
+      if (query.length < 2) return;
+
+      document.getElementById('loading').style.display = 'block';
+
+      searchTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`${BASE_URL}/search/movie?language=en-US&query=${encodeURIComponent(query)}&page=1`);
+          const data = await res.json();
+
+          document.getElementById('loading').style.display = 'none';
+
+          if (currentTab === 'browse') {
+            renderSearchResults(data.results);
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          document.getElementById('loading').style.display = 'none';
+        }
+      }, 500);
+    });
+
+    function renderSearchResults(movies) {
+      const searchContainer = document.getElementById('search-results');
+      const browseContainer = document.getElementById('browse-movies');
+
+      browseContainer.style.display = 'none';
+      searchContainer.style.display = 'flex';
+      searchContainer.innerHTML = '';
+
+      if (movies.length === 0) {
+        searchContainer.innerHTML = '<div class="empty-state"><h3>No movies found</h3></div>';
+        return;
+      }
+
+      movies.forEach(movie => {
+        searchContainer.appendChild(createBrowseCard(movie));
+      });
+    }
+
+    // ---------- TOAST ----------
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast-notification';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

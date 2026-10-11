@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watchlist - Cinephiles</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 50%;
+      left: 15px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      z-index: 1000;
+    }
+
+    .sidebar a {
+      color: white;
+      font-size: 22px;
+      text-decoration: none;
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .sidebar a:hover {
+      color: #1db954;
+      transform: scale(1.2);
+    }
+
+    /* Logo */
+    .logo {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 2000;
+    }
+
+    .logo img {
+      height: 110px;
+      width: auto;
+      filter: drop-shadow(0 0 5px rgba(0,0,0,0.7));
+    }
+
+    /* Header Section */
+    .header-section {
+      padding: 120px 40px 40px 100px;
+      background: linear-gradient(to bottom, rgba(20,20,20,1) 0%, rgba(0,0,0,1) 100%);
+    }
+
+    .header-section h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .header-section p {
+      color: #aaa;
+      font-size: 1.1rem;
+    }
+
+    /* Search Bar */
+    .search-container {
+      padding: 20px 40px 20px 100px;
+      background-color: #0a0a0a;
+    }
+
+    .search-bar {
+      max-width: 600px;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .search-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: white;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    .search-bar input::placeholder {
+      color: #999;
+    }
+
+    .search-bar i {
+      color: #999;
+      margin-right: 10px;
+    }
+
+    /* Tabs */
+    .tabs {
+      padding: 20px 40px 0 100px;
+      border-bottom: 1px solid #222;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 1.1rem;
+      padding: 10px 20px;
+      margin-right: 20px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      color: white;
+      border-bottom: 3px solid #1db954;
+    }
+
+    .tab-btn:hover {
+      color: white;
+    }
+
+    /* Content Section */
+    .content-section {
+      padding: 30px 40px 40px 100px;
+      min-height: 60vh;
+    }
+
+    /* Movie Card */
+    .movie-card {
+      position: relative;
+      width: 180px;
+      border-radius: 8px;
+      transition: transform 0.3s;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .movie-card:hover {
+      transform: scale(1.05);
+    }
+
+    .movie-card img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .movie-card .movie-title {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+      color: #ddd;
+    }
+
+    .movie-card .movie-rating {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.8);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* Add/Remove Button on Card */
+    .movie-card .action-btn {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(29, 185, 84, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .movie-card .action-btn:hover {
+      background: rgba(29, 185, 84, 1);
+      transform: scale(1.1);
+    }
+
+    .movie-card .action-btn.remove {
+      background: rgba(220, 53, 69, 0.9);
+    }
+
+    .movie-card .action-btn.remove:hover {
+      background: rgba(220, 53, 69, 1);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+      color: #999;
+      margin-bottom: 10px;
+    }
+
+    /* Grid Layout */
+    .movie-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    /* Loading Spinner */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <a href="index.html"><i class="bi bi-house"></i></a>
+    <a href="watchlist.html" class="active"><i class="bi bi-bookmark-plus"></i></a>
+    <a href="watched.html"><i class="bi bi-list-ul"></i></a>
+    <a href="faceoff.html"><i class="bi bi-lightning-charge"></i></a>
+  </div>
+
+  <!-- Header -->
+  <div class="header-section">
+    <h1>My Watchlist</h1>
+    <p id="watchlist-count">0 movies to watch</p>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-container">
+    <div class="search-bar">
+      <i class="bi bi-search"></i>
+      <input type="text" id="searchInput" placeholder="Search for movies to add...">
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('my-watchlist')">My Watchlist</button>
+    <button class="tab-btn" onclick="showTab('browse')">Browse Movies</button>
+  </div>
+
+  <!-- Content -->
+  <div class="content-section">
+    <!-- My Watchlist Tab -->
+    <div id="my-watchlist-tab" class="tab-content">
+      <div id="watchlist-movies" class="movie-grid"></div>
+      <div id="empty-watchlist" class="empty-state" style="display:none;">
+        <i class="bi bi-bookmark-x"></i>
+        <h3>Your watchlist is empty</h3>
+        <p>Browse movies and add them to your watchlist!</p>
+      </div>
+    </div>
+
+    <!-- Browse Tab -->
+    <div id="browse-tab" class="tab-content" style="display:none;">
+      <div id="browse-movies" class="movie-grid"></div>
+      <div id="search-results" class="movie-grid" style="display:none;"></div>
+      <div class="loading" id="loading" style="display:none;">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="api-config.js"></script>
+ 
+ <script>
+  requireAuth();
+
+  
+  const BASE_URL = API_BASE + "/tmdb";
+  const IMG_URL = "https://image.tmdb.org/t/p/w500";
+
+  let watchlist = [];
+  let currentTab = 'my-watchlist';
+  let searchTimeout;
+
+  async function init() {
+    await loadWatchlist();
+    loadBrowseMovies();
+  }
+
+  async function loadWatchlist() {
+    try {
+      watchlist = await apiFetch("/watchlist/");
+      renderWatchlist();
+      updateWatchlistCount();
+    } catch (err) {
+      console.error("Error loading watchlist:", err);
+    }
+  }
+
+  function showTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    if (tab === 'my-watchlist') {
+      document.getElementById('my-watchlist-tab').style.display = 'block';
+      document.getElementById('browse-tab').style.display = 'none';
+    } else {
+      document.getElementById('my-watchlist-tab').style.display = 'none';
+      document.getElementById('browse-tab').style.display = 'block';
+    }
+  }
+
+  function updateWatchlistCount() {
+    const count = watchlist.length;
+    document.getElementById('watchlist-count').textContent =
+      `${count} movie${count !== 1 ? 's' : ''} to watch`;
+  }
+
+  function renderWatchlist() {
+    const container = document.getElementById('watchlist-movies');
+    const emptyState = document.getElementById('empty-watchlist');
+
+    if (watchlist.length === 0) {
+      container.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+    container.innerHTML = '';
+
+    watchlist.forEach(movie => {
+      // normalize field names since backend uses tmdb_movie_id
+      container.appendChild(createMovieCard({
+        id: movie.tmdb_movie_id,
+        title: movie.title,
+        poster_path: movie.poster_path,
+        vote_average: movie.vote_average,
+      }, true));
+    });
+  }
+
+  async function loadBrowseMovies() {
+    try {
+      const res = await fetch(`${BASE_URL}/movie/popular?language=en-US&page=1`);
+      const data = await res.json();
+      renderBrowseMovies(data.results);
+    } catch (error) {
+      console.error('Error loading movies:', error);
+    }
+  }
+
+  function renderBrowseMovies(movies) {
+    const container = document.getElementById('browse-movies');
+    container.innerHTML = '';
+    movies.forEach(movie => {
+      const inList = watchlist.some(m => m.tmdb_movie_id === movie.id);
+      container.appendChild(createMovieCard(movie, inList));
+    });
+  }
+
+  function createMovieCard(movie, isInWatchlist) {
+    const div = document.createElement('div');
+    div.className = 'movie-card';
+
+    const posterPath = movie.poster_path ? IMG_URL + movie.poster_path : 'https://via.placeholder.com/180x270?text=No+Image';
+
+    div.innerHTML = `
+      <img src="${posterPath}" alt="${movie.title}">
+      <div class="movie-rating">⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</div>
+      <button class="action-btn ${isInWatchlist ? 'remove' : ''}" onclick="toggleWatchlist(${movie.id}, event)">
+        <i class="bi ${isInWatchlist ? 'bi-dash' : 'bi-plus'}"></i>
+      </button>
+      <div class="movie-title">${movie.title}</div>
+    `;
+
+    return div;
+  }
+
+  async function toggleWatchlist(movieId, event) {
+    event.stopPropagation();
+
+    const existing = watchlist.find(m => m.tmdb_movie_id === movieId);
+
+    try {
+      if (existing) {
+        await apiFetch(`/watchlist/${movieId}`, { method: "DELETE" });
+        watchlist = watchlist.filter(m => m.tmdb_movie_id !== movieId);
+      } else {
+        await addToWatchlist(movieId);
+        return; // addToWatchlist already refreshes views
+      }
+
+      renderWatchlist();
+      updateWatchlistCount();
+      if (currentTab === 'browse') loadBrowseMovies();
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  async function addToWatchlist(movieId) {
+    try {
+      const res = await fetch(`${BASE_URL}/movie/${movieId}?language=en-US`);
+      const movie = await res.json();
+
+      const created = await apiFetch("/watchlist/", {
+        method: "POST",
+        body: JSON.stringify({
+          tmdb_movie_id: movie.id,
+          title: movie.title,
+          poster_path: movie.poster_path,
+          vote_average: movie.vote_average,
+          release_date: movie.release_date,
+          overview: movie.overview,
+        }),
+      });
+
+      watchlist.push(created);
+      updateWatchlistCount();
+      renderWatchlist();
+
+      if (currentTab === 'browse') {
+        if (document.getElementById('search-results').style.display === 'flex') {
+          // leave search results as-is visually; re-render will happen on next search
+        } else {
+          loadBrowseMovies();
+        }
+      }
+
+      showToast('Added to watchlist!');
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    const query = e.target.value.trim();
+    clearTimeout(searchTimeout);
+
+    if (query.length === 0) {
+      if (currentTab === 'browse') {
+        document.getElementById('search-results').style.display = 'none';
+        document.getElementById('browse-movies').style.display = 'flex';
+      }
+      return;
+    }
+
+    if (query.length < 2) return;
+
+    document.getElementById('loading').style.display = 'block';
+
+    searchTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/search/movie?language=en-US&query=${encodeURIComponent(query)}&page=1`);
+        const data = await res.json();
+
+        document.getElementById('loading').style.display = 'none';
+
+        if (currentTab === 'browse') {
+          renderSearchResults(data.results);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        document.getElementById('loading').style.display = 'none';
+      }
+    }, 500);
+  });
+
+  function renderSearchResults(movies) {
+    const searchContainer = document.getElementById('search-results');
+    const browseContainer = document.getElementById('browse-movies');
+
+    browseContainer.style.display = 'none';
+    searchContainer.style.display = 'flex';
+    searchContainer.innerHTML = '';
+
+    if (movies.length === 0) {
+      searchContainer.innerHTML = '<div class="empty-state"><h3>No movies found</h3></div>';
+      return;
+    }
+
+    movies.forEach(movie => {
+      const inList = watchlist.some(m => m.tmdb_movie_id === movie.id);
+      searchContainer.appendChild(createMovieCard(movie, inList));
+    });
+  }
+
+  function showToast(message) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #1db954;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      z-index: 9999;
+      animation: slideIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  }
+
+  init();
+</script>
+
+</body>
+</html>

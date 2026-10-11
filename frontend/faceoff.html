@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FaceOff - Cinephiles</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: 'Arial', sans-serif;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 50%;
+      left: 15px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      z-index: 1000;
+    }
+
+    .sidebar a {
+      color: white;
+      font-size: 22px;
+      text-decoration: none;
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .sidebar a:hover, .sidebar a.active {
+      color: #1db954;
+      transform: scale(1.2);
+    }
+
+    .header-section {
+      padding: 80px 40px 10px 100px;
+      text-align: left;
+    }
+
+    .header-section h1 {
+      font-size: 2.8rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-section p {
+      color: #aaa;
+      font-size: 1.05rem;
+    }
+
+    .vote-count {
+      color: #1db954;
+      font-weight: bold;
+    }
+
+    .mode-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0 10px;
+    }
+
+    .mode-btn {
+      background: #111;
+      border: 1px solid #333;
+      color: #999;
+      padding: 10px 28px;
+      border-radius: 30px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-btn.active {
+      background: #1db954;
+      color: black;
+      font-weight: bold;
+      border-color: #1db954;
+    }
+
+    .mode-btn:hover:not(.active) {
+      color: white;
+      border-color: #666;
+    }
+
+    .arena {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 0;
+      padding: 30px 60px 50px;
+      position: relative;
+    }
+
+    .vs-badge {
+      position: absolute;
+      left: 50%;
+      top: 130px;
+      transform: translate(-50%, -50%);
+      background: #1db954;
+      color: black;
+      font-weight: bold;
+      font-size: 1.4rem;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      box-shadow: 0 0 20px rgba(29,185,84,0.6);
+    }
+
+    .contender {
+      width: 340px;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.25s ease;
+      position: relative;
+    }
+
+    .contender.people {
+      width: 260px;
+    }
+
+    .contender:hover {
+      transform: scale(1.03);
+    }
+
+    .contender.picked {
+      animation: pulseWin 0.5s ease;
+    }
+
+    @keyframes pulseWin {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    .contender.faded {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .contender img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      background: #111;
+    }
+
+    .contender.people img {
+      border-radius: 50%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+    }
+
+    .contender .name {
+      margin-top: 15px;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    .contender .meta {
+      color: #999;
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .result-bar-wrap {
+      display: none;
+      margin-top: 12px;
+      background: #222;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 26px;
+      position: relative;
+    }
+
+    .result-bar-fill {
+      background: #1db954;
+      height: 100%;
+      width: 0%;
+      transition: width 0.6s ease;
+    }
+
+    .result-bar-text {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 4px black;
+    }
+
+    .skip-row {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .skip-row .btn i {
+      margin-left: 6px;
+    }
+
+    .leaderboard-section {
+      padding: 20px 40px 60px 100px;
+    }
+
+    .leaderboard-section h2 {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .leaderboard-section h2 i {
+      color: #ffc107;
+    }
+
+    .leader-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: #111;
+      border-radius: 10px;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+    }
+
+    .leader-rank {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #1db954;
+      width: 30px;
+    }
+
+    .leader-row img {
+      width: 45px;
+      height: 68px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    .leader-row.people img {
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+    }
+
+    .leader-info {
+      flex: 1;
+    }
+
+    .leader-info .leader-title {
+      font-weight: bold;
+    }
+
+    .leader-info .leader-stats {
+      color: #999;
+      font-size: 0.85rem;
+    }
+
+    .leader-winrate {
+      font-weight: bold;
+      color: #1db954;
+      font-size: 1.1rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 60px;
+    }
+
+    .rating-star-icon {
+      color: #ffc107;
+    }
+
+    .toast-notification {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #1db954;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <a href="index.html"><i class="bi bi-house"></i></a>
+    <a href="watchlist.html"><i class="bi bi-bookmark-plus"></i></a>
+    <a href="watched.html"><i class="bi bi-list-ul"></i></a>
+    <a href="faceoff.html" class="active"><i class="bi bi-lightning-charge"></i></a>
+  </div>
+
+  <!-- Header -->
+  <div class="header-section">
+    <h1><i class="bi bi-lightning-charge-fill" style="color:#1db954;"></i> FaceOff</h1>
+    <p><span id="modeLabel">Pick the better movie</span>. <span class="vote-count" id="totalVotes">0</span> community votes so far.</p>
+  </div>
+
+  <!-- Mode Toggle -->
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="modeMovieBtn" onclick="switchMode('movie')"><i class="bi bi-film"></i> Movies</button>
+    <button class="mode-btn" id="modeActorBtn" onclick="switchMode('actor')"><i class="bi bi-person-badge"></i> Actors</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-spinner" id="loadingSpinner">
+    <div class="spinner-border text-success" role="status"></div>
+  </div>
+
+  <!-- Arena -->
+  <div class="arena" id="arena" style="display:none;">
+    <div class="contender" id="contenderA" onclick="vote('A')">
+      <img id="posterA" src="" alt="">
+      <div class="name" id="titleA"></div>
+      <div class="meta" id="metaA"></div>
+      <div class="result-bar-wrap" id="barWrapA">
+        <div class="result-bar-fill" id="barFillA"></div>
+        <div class="result-bar-text" id="barTextA"></div>
+      </div>
+    </div>
+
+    <div class="vs-badge">VS</div>
+
+    <div class="contender" id="contenderB" onclick="vote('B')">
+      <img id="posterB" src="" alt="">
+      <div class="name" id="titleB"></div>
+      <div class="meta" id="metaB"></div>
+      <div class="result-bar-wrap" id="barWrapB">
+        <div class="result-bar-fill" id="barFillB"></div>
+        <div class="result-bar-text" id="barTextB"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="skip-row" id="skipRow" style="display:none;">
+    <button class="btn btn-outline-light" onclick="loadNewMatchup()">Skip / Next Matchup <i class="bi bi-skip-forward"></i></button>
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="leaderboard-section">
+    <h2 id="leaderboardTitle"><i class="bi bi-trophy-fill"></i> Movie Leaderboard</h2>
+    <div id="leaderboard"></div>
+    <div class="empty-state" id="emptyLeaderboard" style="display:none;">
+      <p>No votes yet — start voting above to build the leaderboard!</p>
+    </div>
+  </div>
+
+  <script src="api-config.js"></script>
+  <script>
+    requireAuth(); // redirects to auth.html if there's no token
+
+    
+    const BASE_URL = API_BASE + "/tmdb";
+    const IMG_URL = "https://image.tmdb.org/t/p/w500";
+    const PROFILE_URL = "https://image.tmdb.org/t/p/w300";
+
+    // Curated list of well-known actors, looked up by name on TMDB
+    const CURATED_ACTORS = [
+      "Leonardo DiCaprio", "Christian Bale", "Al Pacino", "Robert De Niro",
+      "Tom Hanks", "Denzel Washington", "Morgan Freeman", "Brad Pitt",
+      "Johnny Depp", "Tom Cruise", "Will Smith", "Joaquin Phoenix",
+      "Daniel Day-Lewis", "Anthony Hopkins", "Samuel L. Jackson",
+      "Matthew McConaughey", "Ryan Gosling", "Edward Norton",
+      "Russell Crowe", "Hugh Jackman", "Jake Gyllenhaal", "Mark Ruffalo",
+      "Benedict Cumberbatch", "Keanu Reeves",
+      "Robert Downey Jr.", "Chris Evans", "Idris Elba", "Jason Statham",
+      "Meryl Streep", "Scarlett Johansson", "Natalie Portman",
+      "Cate Blanchett", "Charlize Theron", "Emma Stone", "Jennifer Lawrence",
+      "Angelina Jolie", "Nicole Kidman", "Margot Robbie", "Viola Davis",
+      "Sandra Bullock", "Julia Roberts", "Amy Adams", "Saoirse Ronan",
+      "Zendaya", "Florence Pugh", "Timothée Chalamet", "Michael Fassbender",
+      "Gary Oldman", "Willem Dafoe"
+    ];
+
+    let currentMode = 'movie'; // 'movie' or 'actor'
+    let moviePool = [];
+    let actorPool = [];
+    let contenderA = null;
+    let contenderB = null;
+    let votingLocked = false;
+
+    // ---------- HELPERS ----------
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str == null ? '' : str;
+      return d.innerHTML;
+    }
+
+    function setText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    function getName(item) {
+      return currentMode === 'movie' ? item.title : item.name;
+    }
+
+    function getImage(item) {
+      return currentMode === 'movie' ? item.poster_path : item.profile_path;
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast-notification';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    // ---------- INIT ----------
+    async function init() {
+      document.getElementById('loadingSpinner').style.display = 'block';
+      await Promise.all([buildMoviePool(), buildActorPool()]);
+      document.getElementById('loadingSpinner').style.display = 'none';
+      loadNewMatchup();
+      refreshCommunityData();
+    }
+
+    async function refreshCommunityData() {
+      await Promise.all([renderLeaderboard(), updateTotalVotes()]);
+    }
+
+    // ---------- MODE SWITCHING ----------
+    function switchMode(mode) {
+      if (currentMode === mode) return;
+      currentMode = mode;
+
+      document.getElementById('modeMovieBtn').classList.toggle('active', mode === 'movie');
+      document.getElementById('modeActorBtn').classList.toggle('active', mode === 'actor');
+      setText('modeLabel', mode === 'movie' ? 'Pick the better movie' : 'Pick the better actor');
+
+      const lbTitle = document.getElementById('leaderboardTitle');
+      if (lbTitle) {
+        lbTitle.innerHTML = `<i class="bi bi-trophy-fill"></i> ${mode === 'movie' ? 'Movie' : 'Actor'} Leaderboard`;
+      }
+
+      document.querySelectorAll('.contender').forEach(el => el.classList.toggle('people', mode === 'actor'));
+
+      loadNewMatchup();
+      refreshCommunityData();
+    }
+
+    // ---------- BUILD POOLS ----------
+    async function buildMoviePool() {
+      try {
+        const [pop1, pop2, top1] = await Promise.all([
+          fetch(`${BASE_URL}/movie/popular?language=en-US&page=1`).then(r => r.json()),
+          fetch(`${BASE_URL}/movie/popular?language=en-US&page=2`).then(r => r.json()),
+          fetch(`${BASE_URL}/movie/top_rated?language=en-US&page=1`).then(r => r.json()),
+        ]);
+
+        const combined = [...pop1.results, ...pop2.results, ...top1.results];
+        const unique = {};
+        combined.forEach(m => { if (m.poster_path) unique[m.id] = m; });
+        moviePool = Object.values(unique);
+      } catch (error) {
+        console.error('Error building movie pool:', error);
+      }
+    }
+
+    async function buildActorPool() {
+      try {
+        const searches = await Promise.all(
+          CURATED_ACTORS.map(name =>
+            fetch(`${BASE_URL}/search/person?language=en-US&query=${encodeURIComponent(name)}`)
+              .then(r => r.json())
+              .catch(() => null)
+          )
+        );
+
+        const unique = {};
+        searches.forEach(result => {
+          if (!result || !result.results || result.results.length === 0) return;
+          const person = result.results[0];
+          if (person.profile_path) unique[person.id] = person;
+        });
+
+        actorPool = Object.values(unique);
+      } catch (error) {
+        console.error('Error building actor pool:', error);
+      }
+    }
+
+    function getCurrentPool() {
+      return currentMode === 'movie' ? moviePool : actorPool;
+    }
+
+    function getRandomPair() {
+      const pool = getCurrentPool();
+      if (pool.length < 2) return null;
+
+      const i = Math.floor(Math.random() * pool.length);
+      let j;
+      do {
+        j = Math.floor(Math.random() * pool.length);
+      } while (j === i);
+
+      return [pool[i], pool[j]];
+    }
+
+    // ---------- MATCHUP ----------
+    function loadNewMatchup() {
+      const pair = getRandomPair();
+      if (!pair) return;
+
+      votingLocked = false;
+      contenderA = pair[0];
+      contenderB = pair[1];
+
+      document.getElementById('arena').style.display = 'flex';
+      document.getElementById('skipRow').style.display = 'block';
+
+      renderContender('A', contenderA);
+      renderContender('B', contenderB);
+
+      document.getElementById('contenderA').classList.remove('picked', 'faded');
+      document.getElementById('contenderB').classList.remove('picked', 'faded');
+      document.getElementById('barWrapA').style.display = 'none';
+      document.getElementById('barWrapB').style.display = 'none';
+      document.getElementById('barFillA').style.width = '0%';
+      document.getElementById('barFillB').style.width = '0%';
+    }
+
+    function renderContender(side, item) {
+      const img = document.getElementById(`poster${side}`);
+      const title = document.getElementById(`title${side}`);
+      const meta = document.getElementById(`meta${side}`);
+
+      if (currentMode === 'movie') {
+        img.src = IMG_URL + item.poster_path;
+        title.textContent = item.title;
+        const year = item.release_date ? item.release_date.split('-')[0] : '—';
+        meta.innerHTML = `${year} • <i class="bi bi-star-fill rating-star-icon"></i> ${item.vote_average.toFixed(1)}`;
+      } else {
+        img.src = PROFILE_URL + item.profile_path;
+        title.textContent = item.name;
+        const knownFor = item.known_for && item.known_for.length > 0
+          ? item.known_for.slice(0, 2).map(k => k.title || k.name).join(', ')
+          : 'Actor';
+        meta.textContent = knownFor;
+      }
+    }
+
+    async function vote(winnerSide) {
+      if (votingLocked || !contenderA || !contenderB) return;
+      votingLocked = true;
+
+      const a = contenderA;
+      const b = contenderB;
+      const mode = currentMode;
+      const winner = winnerSide === 'A' ? a : b;
+      const loseSide = winnerSide === 'A' ? 'B' : 'A';
+
+      document.getElementById(`contender${winnerSide}`).classList.add('picked');
+      document.getElementById(`contender${loseSide}`).classList.add('faded');
+
+      try {
+        // One round trip: saves the vote and returns stats + total count
+        const result = await apiFetch('/votes/cast', {
+          method: 'POST',
+          body: JSON.stringify({
+            entity_type: mode,
+            contender_a_id: a.id,
+            contender_a_name: mode === 'movie' ? a.title : a.name,
+            contender_a_image: mode === 'movie' ? a.poster_path : a.profile_path,
+            contender_b_id: b.id,
+            contender_b_name: mode === 'movie' ? b.title : b.name,
+            contender_b_image: mode === 'movie' ? b.poster_path : b.profile_path,
+            winner_id: winner.id,
+          }),
+        });
+
+        if (result) {
+          const byId = {};
+          result.stats.forEach(s => { byId[s.id] = s; });
+          showResultBars(byId[a.id], byId[b.id]);
+          if (mode === currentMode) setText('totalVotes', result.count);
+        }
+
+        // Refresh the leaderboard in the background; don't wait for it
+        renderLeaderboard();
+      } catch (err) {
+        showToast(err.message || 'Could not save your vote');
+        document.getElementById(`contender${winnerSide}`).classList.remove('picked');
+        document.getElementById(`contender${loseSide}`).classList.remove('faded');
+        votingLocked = false;
+        return;
+      }
+
+      // Only advance if the user hasn't already moved on (skip or mode switch)
+      setTimeout(() => {
+        if (contenderA === a && contenderB === b) loadNewMatchup();
+      }, 1200);
+    }
+    
+    function showResultBars(statsA, statsB) {
+      [['A', statsA], ['B', statsB]].forEach(([side, s]) => {
+        if (!s) return;
+        document.getElementById(`barWrap${side}`).style.display = 'block';
+        setText(`barText${side}`, `${s.win_rate}% win rate (${s.wins}W-${s.losses}L)`);
+        setTimeout(() => {
+          document.getElementById(`barFill${side}`).style.width = `${s.win_rate}%`;
+        }, 50);
+      });
+    }
+
+    async function updateTotalVotes() {
+      try {
+        const data = await apiFetch(`/votes/count?entity_type=${currentMode}`);
+        if (data) setText('totalVotes', data.count);
+      } catch (err) {
+        console.error('Error loading vote count:', err);
+      }
+    }
+
+    // ---------- LEADERBOARD ----------
+    async function renderLeaderboard() {
+      const container = document.getElementById('leaderboard');
+      const emptyState = document.getElementById('emptyLeaderboard');
+      const mode = currentMode;
+
+      let entries = [];
+      try {
+        entries = (await apiFetch(`/votes/leaderboard?entity_type=${mode}`)) || [];
+      } catch (err) {
+        console.error('Error loading leaderboard:', err);
+      }
+
+      // ignore the response if the user switched modes while it was loading
+      if (mode !== currentMode) return;
+
+      if (entries.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      container.innerHTML = '';
+
+      const imgBase = mode === 'movie' ? IMG_URL : PROFILE_URL;
+
+      entries.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = `leader-row ${mode === 'actor' ? 'people' : ''}`;
+        div.innerHTML = `
+          <div class="leader-rank">#${index + 1}</div>
+          <img src="${imgBase + item.image}" alt="${esc(item.name)}">
+          <div class="leader-info">
+            <div class="leader-title">${esc(item.name)}</div>
+            <div class="leader-stats">${item.wins}W - ${item.losses}L (${item.total} matchups)</div>
+          </div>
+          <div class="leader-winrate">${Math.round(item.win_rate)}%</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

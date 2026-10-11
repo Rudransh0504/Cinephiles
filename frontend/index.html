@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinephiles - Latest Release</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="api-config.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 95vh;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.7) 0%, 
+        rgba(0, 0, 0, 0.1) 50%, 
+        rgba(0, 0, 0, 0.8) 85%,
+        rgba(0, 0, 0, 1) 100%
+      );
+    }
+
+    /* Search bar */
+    .search-bar {
+  position: absolute;
+  top: 40px;
+  right: 95px;
+  width: 300px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50px;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  z-index: 3;
+}
+
+    .search-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: white;
+      width: 100%;
+    }
+    .search-bar input::placeholder {
+      color: #ddd;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 700px;
+      padding: 20px;
+      margin-top: 60px;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: bold;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      margin: 20px 0;
+    }
+
+    .btn-lg {
+      padding: 10px 25px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+    }
+
+    /* Movie Cards */
+    .movie-card {
+      width: 180px;
+      border-radius: 8px;
+      transition: transform 0.3s;
+      cursor: pointer;
+    }
+    .movie-card:hover {
+      transform: scale(1.1);
+    }
+
+    h2 {
+      color: white;
+    }
+    
+  .sidebar {
+    position: fixed;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    z-index: 1000;
+  }
+
+  .sidebar a {
+    color: white;
+    font-size: 22px;
+    text-decoration: none;
+    transition: transform 0.2s, color 0.2s;
+  }
+
+  .sidebar a:hover {
+    color: #1db954;
+    transform: scale(1.2);
+  }
+.logo {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2000;
+}
+
+.logo img {
+  height: 110px;
+  width: auto;
+  filter: drop-shadow(0 0 5px rgba(0,0,0,0.7));
+}
+
+/* Toast notification */
+.toast-notification {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #1db954;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 8px;
+  z-index: 9999;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 40px;
+  right: 40px; /* sits just left of the search bar */
+  z-index: 10;
+}
+
+.profile-icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: none;
+  color: white;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.profile-menu {
+  display: none;
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: #181818;
+  border: 1px solid #333;
+  border-radius: 10px;
+  min-width: 180px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+
+.profile-menu.open {
+  display: block;
+}
+
+.profile-menu .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #ddd;
+  text-decoration: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-menu .menu-item:hover {
+  background: #262626;
+  color: white;
+}
+
+.profile-menu .menu-item.logout {
+  color: #ff6b6b;
+  border-top: 1px solid #2a2a2a;
+}
+
+.profile-menu .menu-item.logout:hover {
+  background: rgba(220, 53, 69, 0.15);
+}
+
+.profile-menu .username-label {
+  padding: 12px 16px;
+  color: #777;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+  </style>
+</head>
+<body>
+
+    <!-- Logo -->
+<div class="logo">
+  <img src="logo2.png" alt="Cinephiles Logo">
+</div>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+
+    <!-- Profile Dropdown -->
+<div class="profile-dropdown">
+  <button class="profile-icon-btn" onclick="toggleProfileMenu()">
+    <i class="bi bi-person-fill"></i>
+  </button>
+  <div class="profile-menu" id="profileMenu">
+    <div class="username-label" id="profileUsername">Loading...</div>
+    <a class="menu-item logout" onclick="logout()">
+      <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+  </div>
+</div>
+    <!-- Search Bar -->
+    <form class="search-bar" id="searchForm">
+      <input type="text" id="searchInput" placeholder="Search movies, celebs..." required>
+    </form>
+
+    <div class="container">
+      <div class="hero-content">
+        <h1 id="movie-title">Loading...</h1>
+        <h4 id="movie-release"></h4>
+        <p id="movie-overview"></p>
+        <div id="movie-rating" class="mb-3"></div>
+        <button class="btn btn-primary btn-lg me-2">▶ Watch Now</button>
+        <button class="btn btn-outline-light btn-lg" id="hero-watchlist-btn" onclick="addHeroMovieToWatchlist()">
+          <i class="bi bi-plus"></i> Watchlist
+        </button>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+<div class="sidebar">
+  <a href="index.html" class="icon-link"><i class="bi bi-house"></i></a>
+  <a href="watchlist.html"><i class="bi bi-bookmark-plus"></i></a>
+  <a href="watched.html"><i class="bi bi-list-ul"></i></a>
+  <a href="faceoff.html"><i class="bi bi-lightning-charge"></i></a>
+  
+</div>
+  </section>
+
+  <!-- Popular Movies -->
+  <section class="container py-5">
+    <h2 class="mb-4">Popular Movies</h2>
+    <div class="row" id="popular-movies"></div>
+  </section>
+
+  <!-- Trending Movies -->
+  <section class="container py-5">
+    <h2 class="mb-4">Trending Movies</h2>
+    <div class="row" id="trending-movies"></div>
+  </section>
+
+  <!-- Recommended For You -->
+<section class="container py-5">
+  <h2 class="mb-4">Recommended For You</h2>
+  <div class="row" id="recommended-movies"></div>
+  <p class="text-secondary" id="recommended-hint" style="display:none;"></p>
+</section>
+
+  <!-- Movie Modal -->
+  <div class="modal fade" id="movieModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="movieModalTitle"></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body d-flex gap-3">
+          <img id="movieModalPoster" class="img-fluid rounded" style="width:200px;">
+          <div>
+            <p id="movieModalOverview"></p>
+            <p><strong>Rating:</strong> <span id="movieModalRating"></span></p>
+            <p><strong>Release Date:</strong> <span id="movieModalRelease"></span></p>
+            <p><strong>Cast:</strong> <span id="movieModalCast"></span></p>
+            <button class="btn btn-success mt-3" id="modal-watchlist-btn" onclick="addModalMovieToWatchlist()">
+              <i class="bi bi-plus"></i> Add to Watchlist
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+  requireAuth(); // redirect to auth.html if not logged in
+
+  
+  const BASE_URL = API_BASE + "/tmdb";
+  const IMG_URL = "https://image.tmdb.org/t/p/original";
+  const SMALL_IMG_URL = "https://image.tmdb.org/t/p/w200";
+
+  let currentHeroMovie = null;
+  let currentModalMovie = null;
+  let watchlistIds = new Set(); // cached set of tmdb ids currently in watchlist
+
+  function toggleProfileMenu() {
+  document.getElementById('profileMenu').classList.toggle('open');
+}
+
+// Close dropdown when clicking outside it
+document.addEventListener('click', function(e) {
+  const dropdown = document.querySelector('.profile-dropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    document.getElementById('profileMenu').classList.remove('open');
+  }
+});
+
+async function loadProfile() {
+  try {
+    const user = await apiFetch("/auth/me");
+    document.getElementById('profileUsername').textContent = user.username;
+  } catch (err) {
+    console.error("Error loading profile:", err);
+  }
+}
+
+async function init() {
+  await loadWatchlistIds();
+  await loadProfile();
+  await getLatestMovie();
+  getPopularMovies();
+  getTrendingMovies();
+}
+
+  async function loadWatchlistIds() {
+    try {
+      const items = await apiFetch("/watchlist/");
+      watchlistIds = new Set(items.map(i => i.tmdb_movie_id));
+    } catch (err) {
+      console.error("Error loading watchlist:", err);
+    }
+  }
+
+  async function getLatestMovie() {
+    const res = await fetch(`${BASE_URL}/movie/now_playing?language=en-US&page=1`);
+    const data = await res.json();
+    const movie = data.results[0];
+
+    currentHeroMovie = movie;
+
+    document.getElementById("hero").style.backgroundImage = `url(${IMG_URL}${movie.backdrop_path})`;
+    document.getElementById("movie-title").textContent = movie.title;
+    document.getElementById("movie-release").textContent = `Release: ${movie.release_date}`;
+    document.getElementById("movie-overview").textContent = movie.overview;
+    document.getElementById("movie-rating").textContent = `⭐ ${movie.vote_average.toFixed(1)}/10`;
+
+    updateHeroWatchlistButton();
+  }
+
+  function updateHeroWatchlistButton() {
+    const btn = document.getElementById("hero-watchlist-btn");
+    const inList = watchlistIds.has(currentHeroMovie.id);
+
+    if (inList) {
+      btn.innerHTML = '<i class="bi bi-check"></i> In Watchlist';
+      btn.classList.remove('btn-outline-light');
+      btn.classList.add('btn-success');
+    } else {
+      btn.innerHTML = '<i class="bi bi-plus"></i> Watchlist';
+      btn.classList.remove('btn-success');
+      btn.classList.add('btn-outline-light');
+    }
+  }
+
+  function updateModalWatchlistButton() {
+    const btn = document.getElementById("modal-watchlist-btn");
+    const inList = watchlistIds.has(currentModalMovie.id);
+
+    if (inList) {
+      btn.innerHTML = '<i class="bi bi-check"></i> In Watchlist';
+      btn.classList.remove('btn-success');
+      btn.classList.add('btn-secondary');
+      btn.disabled = true;
+    } else {
+      btn.innerHTML = '<i class="bi bi-plus"></i> Add to Watchlist';
+      btn.classList.remove('btn-secondary');
+      btn.classList.add('btn-success');
+      btn.disabled = false;
+    }
+  }
+
+  async function addHeroMovieToWatchlist() {
+    if (!currentHeroMovie || watchlistIds.has(currentHeroMovie.id)) return;
+
+    try {
+      await apiFetch("/watchlist/", {
+        method: "POST",
+        body: JSON.stringify({
+          tmdb_movie_id: currentHeroMovie.id,
+          title: currentHeroMovie.title,
+          poster_path: currentHeroMovie.poster_path,
+          vote_average: currentHeroMovie.vote_average,
+          release_date: currentHeroMovie.release_date,
+          overview: currentHeroMovie.overview,
+        }),
+      });
+
+      watchlistIds.add(currentHeroMovie.id);
+      updateHeroWatchlistButton();
+      showToast("Added to watchlist!");
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  async function addModalMovieToWatchlist() {
+    if (!currentModalMovie || watchlistIds.has(currentModalMovie.id)) return;
+
+    try {
+      await apiFetch("/watchlist/", {
+        method: "POST",
+        body: JSON.stringify({
+          tmdb_movie_id: currentModalMovie.id,
+          title: currentModalMovie.title,
+          poster_path: currentModalMovie.poster_path,
+          vote_average: currentModalMovie.vote_average,
+          release_date: currentModalMovie.release_date,
+          overview: currentModalMovie.overview,
+        }),
+      });
+
+      watchlistIds.add(currentModalMovie.id);
+      updateModalWatchlistButton();
+      showToast("Added to watchlist!");
+    } catch (err) {
+      showToast(err.message);
+    }
+  }
+
+  async function loadRecommendations() {
+  const hint = document.getElementById("recommended-hint");
+  try {
+    const recs = await apiFetch("/recommendations/for-user/me?top_n=6");
+    if (!recs || recs.length === 0) return;
+
+    const container = document.getElementById("recommended-movies");
+    container.innerHTML = "";
+
+    recs.forEach(movie => {
+      if (!movie.poster_path) return;
+      const col = document.createElement("div");
+      col.className = "col-lg-2 col-md-3 col-sm-4 mb-3";
+      const img = document.createElement("img");
+      img.src = SMALL_IMG_URL + movie.poster_path;
+      img.className = "movie-card";
+      img.title = movie.title;
+      img.addEventListener("click", () => openMovieModal(movie.id));
+      col.appendChild(img);
+      container.appendChild(col);
+    });
+  } catch (err) {
+    // Usually "rate some movies 7+" for a new account
+    hint.textContent = err.message || "Could not load recommendations.";
+    hint.style.display = "block";
+  }
+}
+
+  function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  }
+
+  function renderMovies(movies, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    movies.slice(0, 6).forEach(movie => {
+      const col = document.createElement("div");
+      col.className = "col-lg-2 col-md-3 col-sm-4 mb-3";
+      const img = document.createElement("img");
+      img.src = SMALL_IMG_URL + movie.poster_path;
+      img.className = "movie-card";
+      img.addEventListener("click", () => openMovieModal(movie.id));
+      col.appendChild(img);
+      container.appendChild(col);
+    });
+  }
+
+  async function getPopularMovies() {
+    const res = await fetch(`${BASE_URL}/movie/popular?language=en-US&page=1`);
+    const data = await res.json();
+    renderMovies(data.results, "popular-movies");
+  }
+
+  async function getTrendingMovies() {
+    const res = await fetch(`${BASE_URL}/trending/movie/week`);
+    const data = await res.json();
+    renderMovies(data.results, "trending-movies");
+  }
+
+  async function openMovieModal(movieId) {
+    const res = await fetch(`${BASE_URL}/movie/${movieId}?language=en-US&append_to_response=credits`);
+    const movie = await res.json();
+
+    currentModalMovie = movie;
+
+    document.getElementById("movieModalTitle").textContent = movie.title;
+    document.getElementById("movieModalPoster").src = SMALL_IMG_URL + movie.poster_path;
+    document.getElementById("movieModalOverview").textContent = movie.overview;
+    document.getElementById("movieModalRating").textContent = movie.vote_average.toFixed(1) + "/10";
+    document.getElementById("movieModalRelease").textContent = movie.release_date;
+
+    const cast = movie.credits.cast.slice(0, 5).map(c => c.name).join(", ");
+    document.getElementById("movieModalCast").textContent = cast;
+
+    updateModalWatchlistButton();
+
+    const modal = new bootstrap.Modal(document.getElementById("movieModal"));
+    modal.show();
+  }
+
+  document.getElementById("searchForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const query = document.getElementById("searchInput").value;
+    if (query) {
+      window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+    }
+  });
+
+  async function init() {
+    await loadWatchlistIds();
+    await getLatestMovie();
+    getPopularMovies();
+    getTrendingMovies();
+  }
+
+  async function init() {
+  await loadWatchlistIds();
+  await loadProfile();
+  await getLatestMovie();
+  getPopularMovies();
+  getTrendingMovies();
+  loadRecommendations();
+}
+
+  init();
+</script>
+
+</body>
+</html>
